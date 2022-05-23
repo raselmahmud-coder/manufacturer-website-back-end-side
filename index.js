@@ -33,7 +33,10 @@ async function run() {
     const toolsCollection = client
       .db("autoparts-assign-12")
       .collection("Tools");
-    console.log("toolsCollection is ready");
+    const usersCollection = client
+      .db("autoparts-assign-12")
+      .collection("users");
+    console.log("database connected");
     // for tools
     app.get("/tools", async (req, res) => {
       const query = {};
@@ -48,10 +51,31 @@ async function run() {
       // console.log("got result", result);
       res.send(result);
     });
-    // users update in data base with set a role
+    // users update in data base using token insert in the front end
     app.put("/users/:email", async (req, res) => {
-      
-    })
+      const { email } = req.params;
+      const { name } = req.body;
+      console.log("name", name);
+      const filter = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: { email: email, name: name },
+      };
+      const result = await usersCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      const token = jwt.sign(
+        { email: email },
+        process.env.ACCESS_TOKEN_SECRET,
+        {
+          expiresIn: "4d",
+        }
+      );
+      console.log("user", result, token);
+      res.send({result, token});
+    });
   } catch (err) {
     console.log("error getting", err);
   }
