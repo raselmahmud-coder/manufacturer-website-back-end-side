@@ -36,11 +36,32 @@ async function run() {
     const usersCollection = client
       .db("autoparts-assign-12")
       .collection("users");
+    const ordersCollection = client
+      .db("autoparts-assign-12")
+      .collection("orders");
     console.log("database connected");
-    // for tools
+    // for tools getting
     app.get("/tools", async (req, res) => {
       const query = {};
       const result = await toolsCollection.find(query).toArray();
+      res.send(result);
+    });
+    // update a tool
+    app.put("/tool/:id", async (req, res) => {
+      const { id } = req.params;
+      const { quantity } = req.body;
+      // console.log(quantity, "put tool....", id);
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: { quantity: quantity },
+      };
+      const result = await toolsCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      // console.log("got result", result);
       res.send(result);
     });
     // get a specific tool
@@ -73,8 +94,22 @@ async function run() {
           expiresIn: "4d",
         }
       );
-      console.log("user", result, token);
-      res.send({result, token});
+      // console.log("user", result, token);
+      res.send({ result, token });
+    });
+    // insert a order in the database
+    app.post("/order", async (req, res) => {
+      const order = req.body;
+      console.log("order", order);
+      const result = await ordersCollection.insertOne(order);
+      // sendAppointmentEmail(order);
+      res.send(result);
+    });
+    app.get("/orders/:email", async (req, res) => {
+      const { email } = req.params;
+      const query = { userEmail: email };
+      const result = await ordersCollection.find(query).toArray();
+      console.log("getting result", result);
     });
   } catch (err) {
     console.log("error getting", err);
