@@ -39,6 +39,9 @@ async function run() {
     const ordersCollection = client
       .db("autoparts-assign-12")
       .collection("orders");
+    const reviewsCollection = client
+      .db("autoparts-assign-12")
+      .collection("reviews");
     console.log("database connected");
     // for tools getting
     app.get("/tools", async (req, res) => {
@@ -163,6 +166,38 @@ async function run() {
         // console.log("secret", paymentIntent.client_secret);
         res.send({ clientSecret: paymentIntent.client_secret });
       }
+    });
+    // add a review
+    app.post("/add-review", async (req, res) => {
+      const { review } = req.body;
+      console.log("get review", review);
+      const result = await reviewsCollection.insertOne(review);
+      res.send(result);
+    });
+    // get all reviews
+    app.get("/reviews", async (req, res) => {
+      const query = {};
+      const result = await reviewsCollection.find(query).toArray();
+      // console.log("review",result);
+      res.send(result);
+    });
+    // my profile data insert
+    app.patch("/update-profile/:email", async (req, res) => {
+      const { email } = req.params;
+      const { data } = req.body;
+      const query = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          higherDegree: data.degree,
+          location: data.location,
+          linkedinLink: data.linkedinLink,
+          phone: data.phone,
+        },
+      };
+      const result = await usersCollection.updateOne(query, updateDoc, options);
+      // console.log(email, "data...", data);
+      res.send(result);
     });
 
     // end of try block
