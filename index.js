@@ -105,6 +105,27 @@ async function run() {
       // sendAppointmentEmail(order);
       res.send(result);
     });
+    // update the order after payment
+    app.patch("/order/:id", async (req, res) => {
+      const { id } = req.params;
+      const payment = req.body;
+      const filter = { _id: ObjectId(id) };
+      console.log("payment info", payment, filter);
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          paymentStatus: payment.paymentStatus,
+          transactionId: payment.transactionId,
+        },
+      };
+      const result = await ordersCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      // sendAppointmentEmail(order);
+      res.send(result);
+    });
     app.get("/orders/:email", async (req, res) => {
       const { email } = req.params;
       const query = { userEmail: email };
@@ -117,17 +138,34 @@ async function run() {
       const { id } = req.params;
       const query = { _id: ObjectId(id) };
       const result = await ordersCollection.findOne(query);
-      console.log("getting result", result);
+      // console.log("getting result", result);
       res.send(result);
     });
     // delete a order
     app.delete("/order/:id", async (req, res) => {
       const { id } = req.params;
-      const query = { _id: ObjectId(id) }
-      const result = await ordersCollection.deleteOne(query)
+      const query = { _id: ObjectId(id) };
+      const result = await ordersCollection.deleteOne(query);
       // console.log("delete id",id, result);
-      res.send(result)
-    })
+      res.send(result);
+    });
+    // make a payment intent post api
+    app.post("/create-payment-intent", async (req, res) => {
+      const { productPrice } = req.body;
+      // console.log("Price", productPrice, "body", req.body);
+      if (productPrice) {
+        const amount = productPrice * 100;
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: "usd",
+          payment_method_types: ["card"],
+        });
+        // console.log("secret", paymentIntent.client_secret);
+        res.send({ clientSecret: paymentIntent.client_secret });
+      }
+    });
+
+    // end of try block
   } catch (err) {
     console.log("error getting", err);
   }
