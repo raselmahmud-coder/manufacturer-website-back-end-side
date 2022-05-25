@@ -100,7 +100,7 @@ async function run() {
     // insert a order in the database
     app.post("/order", async (req, res) => {
       const order = req.body;
-      console.log("order", order);
+      // console.log("order", order);
       const result = await ordersCollection.insertOne(order);
       // sendAppointmentEmail(order);
       res.send(result);
@@ -109,8 +109,25 @@ async function run() {
       const { email } = req.params;
       const query = { userEmail: email };
       const result = await ordersCollection.find(query).toArray();
-      console.log("getting result", result);
+      // console.log("getting result", result);
+      res.send(result);
     });
+    // get a order for payment
+    app.get("/order/:id", async (req, res) => {
+      const { id } = req.params;
+      const query = { _id: ObjectId(id) };
+      const result = await ordersCollection.findOne(query);
+      console.log("getting result", result);
+      res.send(result);
+    });
+    // delete a order
+    app.delete("/order/:id", async (req, res) => {
+      const { id } = req.params;
+      const query = { _id: ObjectId(id) }
+      const result = await ordersCollection.deleteOne(query)
+      // console.log("delete id",id, result);
+      res.send(result)
+    })
   } catch (err) {
     console.log("error getting", err);
   }
