@@ -91,11 +91,12 @@ async function run() {
       // console.log("got result", result);
       res.send(result);
     });
-    // users update in data base using token insert in the front end
+    // users update in data base using token insert in the front end when registration
     app.put("/users/:email", async (req, res) => {
       const { email } = req.params;
       const { name } = req.body;
-      // console.log("name", name);
+      console.log("name", name);
+      console.log("email", email);
       const filter = { email: email };
       const options = { upsert: true };
       const updateDoc = {
@@ -113,8 +114,8 @@ async function run() {
           expiresIn: "4d",
         }
       );
-      // console.log("user", result, token);
       res.send({ result, token });
+      // console.log("user", result, token);
     });
     // insert a order in the database
     app.post("/order", async (req, res) => {
@@ -125,7 +126,7 @@ async function run() {
       res.send(result);
     });
     // update the order after payment
-    app.patch("/order/:id", async (req, res) => {
+    app.put("/order/:id", async (req, res) => {
       const { id } = req.params;
       const payment = req.body;
       const filter = { _id: ObjectId(id) };
@@ -145,9 +146,19 @@ async function run() {
       // sendAppointmentEmail(order);
       res.send(result);
     });
+    //each user get all orders
     app.get("/orders/:email", async (req, res) => {
       const { email } = req.params;
+
       const query = { userEmail: email };
+      const result = await ordersCollection.find(query).toArray();
+      // console.log("getting result", result);
+      res.send(result);
+    });
+    //Admin get all orders
+    app.get("/admin-orders/:email", async (req, res) => {
+      const { email } = req.params;
+      const query = {};
       const result = await ordersCollection.find(query).toArray();
       // console.log("getting result", result);
       res.send(result);
@@ -165,7 +176,7 @@ async function run() {
       const { id } = req.params;
       const query = { _id: ObjectId(id) };
       const result = await ordersCollection.deleteOne(query);
-      // console.log("delete id",id, result);
+      console.log("delete id",id, result);
       res.send(result);
     });
     // make a payment intent post api
