@@ -91,6 +91,14 @@ async function run() {
       // console.log("got result", result);
       res.send(result);
     });
+    // delete a specific tool if admin request
+    app.delete("/tool/:id", async (req, res) => {
+      const { id } = req.params;
+      const query = { _id: ObjectId(id) };
+      const result = await toolsCollection.deleteOne(query);
+      console.log("got result for delete", result);
+      res.send(result);
+    });
     // users update in data base using token insert in the front end when registration
     app.put("/users/:email", async (req, res) => {
       const { email } = req.params;
@@ -232,6 +240,7 @@ async function run() {
       if (email) {
         const query = { email: email };
         const result = await usersCollection.findOne(query);
+        console.log("user request", email, result);
         res.send([result]);
       }
       // console.log("email", result);
