@@ -43,13 +43,13 @@ async function run() {
       .db("autoparts-assign-12")
       .collection("reviews");
     console.log("database connected");
-    // for tools getting
+    // for home page tools getting
     app.get("/tools", async (req, res) => {
       const query = {};
       const result = await toolsCollection.find(query).toArray();
       res.send(result);
     });
-    // update a tool
+    // update a tool when user confirm a order
     app.put("/tool/:id", async (req, res) => {
       const { id } = req.params;
       const { quantity } = req.body;
@@ -67,7 +67,23 @@ async function run() {
       // console.log("got result", result);
       res.send(result);
     });
-    // get a specific tool
+    // Add a tool when admin request to insert from add a product page
+    app.post("/tool/:email", async (req, res) => {
+      const email = req.params; //email for security verify
+      const tool = req.body;
+      const query = {
+        name: tool.name,
+        price: tool.price,
+        quantity: tool.quantity,
+        image: tool.image,
+        description: tool.description,
+      };
+
+      const result = await toolsCollection.insertOne(query);
+      console.log("got result", result);
+      res.send(result);
+    });
+    // get a specific tool for details info show in the purchase page
     app.get("/tool/:id", async (req, res) => {
       const { id } = req.params;
       const query = { _id: ObjectId(id) };
@@ -79,7 +95,7 @@ async function run() {
     app.put("/users/:email", async (req, res) => {
       const { email } = req.params;
       const { name } = req.body;
-      console.log("name", name);
+      // console.log("name", name);
       const filter = { email: email };
       const options = { upsert: true };
       const updateDoc = {
@@ -197,6 +213,41 @@ async function run() {
       };
       const result = await usersCollection.updateOne(query, updateDoc, options);
       // console.log(email, "data...", data);
+      res.send(result);
+    });
+    // show user info in the view profile page
+    app.get("/user/:email", async (req, res) => {
+      const { email } = req.params;
+      if (email) {
+        const query = { email: email };
+        const result = await usersCollection.findOne(query);
+        res.send([result]);
+      }
+      // console.log("email", result);
+    });
+    // get all user only can browse admin
+    app.get("/users", async (req, res) => {
+      const query = {};
+      const result = await usersCollection.find(query).toArray();
+      res.send(result);
+    });
+    // update the role when admin request
+    app.patch("/user/:email", async (req, res) => {
+      const { email } = req.params;
+      const query = { email: email };
+      const option = { upsert: true };
+      const updateDoc = {
+        $set: { role: "admin" },
+      };
+      const result = await usersCollection.updateOne(query, updateDoc, option);
+      res.send(result);
+    });
+    // delete a user when admin request
+    app.delete("/user/:email", async (req, res) => {
+      const { email } = req.params;
+      console.log("expected", email);
+      const query = { email: email };
+      const result = await usersCollection.deleteOne(query);
       res.send(result);
     });
 
